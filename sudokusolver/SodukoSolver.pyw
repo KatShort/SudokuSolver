@@ -3,6 +3,10 @@ from datetime import datetime
 
 root = Tk()
 
+#still need to improve GUI -- because it's super ugly :(
+#can probably break by inputting a non 1-9 number
+#if I can find a way to say that if possibilities are 23 23 236 657 57 then the third cell must be 6
+
 class Cell(object):
 
     def __init__(self, x, y, smatrix, filled, solved, value, entry):
@@ -91,7 +95,7 @@ def printSudoku():
                 if len(cell.value)==1:
                     print (cell.value[0], end=" ")
                 else:
-                    print ("?", end = " ")
+                    print (cell.value)
             except:
                 if type(cell.value)==int:
                     print (cell.value, end= " ")
@@ -100,6 +104,7 @@ def printSudoku():
 def solveSudoku():
     overTime = False
     done = 0
+    previousdone = 0
     dtstart = datetime.now()
     while done < len(cells):
         for cell in cells:
@@ -115,6 +120,8 @@ def solveSudoku():
                     cell.value = cell.value[0]
                     cell.filled = True
 
+        # if a row, col, or matrix has a member that just one value--
+        # remove that value from the other cells possible values
         for cell in cells:
             if cell.filled:
                 value_to_remove = cell.value
@@ -133,6 +140,74 @@ def solveSudoku():
                         othercells.value.remove(value_to_remove)
                     except:
                         pass
+
+        # given the possible values of a single cell
+        # if one of the possible values is unique among all possible values in that row, col, smatrix
+        # then that cell is that value
+        # this is really only worth it for sudoko that can't be solved by deduction... induction required.
+        if previousdone == done:
+            for i in range(1,10):
+                compare = [1,2,3,4,5,6,7,8,9]
+                for cell in row[i]:
+                    if type(cell.value) == int:
+                        compare.remove(cell.value)
+                singlets = {}
+                for cell in row[i]:
+                    if type(cell.value) == list:
+                        for number in compare:
+                            if number in cell.value:
+                                if number not in singlets.keys():
+                                    singlets[number] = 1
+                                else:
+                                    singlets[number] += 1
+                for number in compare:
+                    if singlets[number] == 1:
+                        for cell in row[i]:
+                            if type(cell.value) == list and number in cell.value:
+                                cell.value = number
+                                cell.filled = True
+
+                compare = [1,2,3,4,5,6,7,8,9]
+                for cell in col[i]:
+                    if type(cell.value) == int:
+                        compare.remove(cell.value)
+                singlets = {}
+                for cell in col[i]:
+                    if type(cell.value) == list:
+                        for number in compare:
+                            if number in cell.value:
+                                if number not in singlets.keys():
+                                    singlets[number] = 1
+                                else:
+                                    singlets[number] += 1
+                for number in compare:
+                    if singlets[number] == 1:
+                        for cell in col[i]:
+                            if type(cell.value) == list and number in cell.value:
+                                cell.value = number
+                                cell.filled = True
+
+                compare = [1,2,3,4,5,6,7,8,9]
+                for cell in smatrix[i]:
+                    if type(cell.value) == int:
+                        compare.remove(cell.value)
+                singlets = {}
+                for cell in smatrix[i]:
+                    if type(cell.value) == list:
+                        for number in compare:
+                            if number in cell.value:
+                                if number not in singlets.keys():
+                                    singlets[number] = 1
+                                else:
+                                    singlets[number] += 1
+                for number in compare:
+                    if singlets[number] == 1:
+                        for cell in smatrix[i]:
+                            if type(cell.value) == list and number in cell.value:
+                                cell.value = number
+                                cell.filled = True
+
+        previousdone = done
         dtend = datetime.now()
         dttotal = dtend - dtstart
         if dttotal.total_seconds() > 2:
@@ -148,6 +223,7 @@ def solveSudoku_button(event):
         overTimeText.grid(columnspan="9")
     else:
         returnSudoku()
+    printSudoku()
 
 
 overTimeText = Label(root, text="The program is confused. \nThis Sudoku is too much.")
